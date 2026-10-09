@@ -172,6 +172,28 @@ class UssdAccessibilityService : AccessibilityService() {
         return true
     }
 
+    /** Sets and submits only the mobile lookup value, requiring an exact Send button. */
+    fun sendLookupReply(mobile: String): Boolean {
+        val root = findUssdRoot() ?: return false
+        val edit = findEditText(root) ?: return false
+        val args = Bundle().apply {
+            putCharSequence(
+                AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,
+                mobile
+            )
+        }
+        if (!edit.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, args)) return false
+
+        val refreshedRoot = findUssdRoot() ?: root
+        val send = findButtonByExactText(refreshedRoot, SEND_LABELS) ?: return false
+        val submitted = send.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+        if (submitted) {
+            lastEmittedText = null
+            frameFilter.reset()
+        }
+        return submitted
+    }
+
     /**
      * Dismisses the current USSD dialog by clicking any close-style button
      * (ok/cancel/close/dismiss/done).
@@ -185,6 +207,27 @@ class UssdAccessibilityService : AccessibilityService() {
         lastEmittedText = null
         frameFilter.reset()
         return ok
+    }
+
+    /** Clears the lookup prompt and clicks only the exact Cancel button. */
+    fun dismissLookupDialog(): Boolean {
+        val root = findUssdRoot() ?: return false
+        val edit = findEditText(root)
+        if (edit != null) {
+            val args = Bundle().apply {
+                putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, "")
+            }
+            if (!edit.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, args)) return false
+        }
+
+        val refreshedRoot = findUssdRoot() ?: root
+        val cancel = findButtonByExactText(refreshedRoot, setOf("Cancel")) ?: return false
+        val dismissed = cancel.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+        if (dismissed) {
+            lastEmittedText = null
+            frameFilter.reset()
+        }
+        return dismissed
     }
 
     fun cancelDialog(): Boolean = dismissDialog()
@@ -303,6 +346,22 @@ class UssdAccessibilityService : AccessibilityService() {
             val cls = n.className?.toString().orEmpty()
             if (cls.contains("Button", true) && labels.any { text.contains(it) }) {
                 found = n
+            }
+        }
+        return found
+    }
+
+    private fun findButtonByExactText(
+        node: AccessibilityNodeInfo,
+        expectedTexts: Set<String>
+    ): AccessibilityNodeInfo? {
+        var found: AccessibilityNodeInfo? = null
+        walk(node) { candidate ->
+            if (found != null) return@walk
+            val isButton = candidate.className?.toString()?.contains("Button", true) == true
+            val text = candidate.text?.toString()?.trim()
+            if (isButton && expectedTexts.any { text.equals(it, ignoreCase = true) }) {
+                found = candidate
             }
         }
         return found

@@ -374,7 +374,8 @@ private fun payViewModel(app: OffipeApplication): PayViewModel {
                         context.startActivity(intent)
                     },
                     clipboardWriter = { text -> writeToClipboard(context, text) },
-                    systemToast = { text -> showSystemToast(context, text) }
+                    systemToast = { text -> showSystemToast(context, text) },
+                    stringFor = context::getString
                 ) as T
             }
         }

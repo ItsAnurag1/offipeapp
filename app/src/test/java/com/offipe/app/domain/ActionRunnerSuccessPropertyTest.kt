@@ -99,4 +99,14 @@ class ActionRunnerSuccessPropertyTest : FunSpec({
             mapOf("note" to "{pin}", "pin" to "123456")
         ) shouldBe "Note {pin}; PIN 123456"
     }
+
+    test("fillTemplate substitutes the mobile lookup variable") {
+        runner.fillTemplate("{mobile}", mapOf("mobile" to "9876543210")) shouldBe "9876543210"
+    }
+
+    test("LookupMobile can only send the mobile variable") {
+        val replies = Actions.LookupMobile.steps.mapNotNull { it.reply }
+        replies shouldBe listOf("{mobile}")
+        replies.any { "{amount}" in it || "{note}" in it || "{pin}" in it } shouldBe false
+    }
 })

@@ -6053,7 +6053,7 @@ _Thinking:_
 
 seq2.log still empty (script prints only failures and final summary; still running). Let's wait.
 
-Also check `docs/` and `others/` for task lists (maybe the9 items).
+Also check `docs/` and `docs/assets/` for task lists (maybe the9 items).
 
 **Tool: bash**
 

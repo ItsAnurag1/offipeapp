@@ -45,11 +45,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.offipe.app.R
 import com.offipe.app.presentation.permissions.openAccessibilitySettings
 import com.offipe.app.presentation.ui.components.Chip
 import com.offipe.app.presentation.ui.components.GhostActionBar
@@ -323,9 +325,10 @@ fun FaqScreen(
 
             Spacer(Modifier.height(26.dp))
             Hairline()
+            Spacer(Modifier.height(18.dp))
 
             GhostActionBar(
-                text = "Source Code & Guides (GitHub)",
+                text = stringResource(R.string.github_source_guides),
                 icon = Icons.Default.Code,
                 onClick = {
                     val i = Intent(Intent.ACTION_VIEW, Uri.parse(GITHUB_REPO_URL))
@@ -334,14 +337,7 @@ fun FaqScreen(
                 },
                 modifier = Modifier.fillMaxWidth()
             )
-            Text(
-                text = "Source code and setup guides are available on GitHub.",
-                style = OffipeType.BodySmall,
-                color = OffipeColors.TextMuted,
-                modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)
-            )
-
-            Spacer(Modifier.height(18.dp))
+            Spacer(Modifier.height(30.dp))
             CookieEasterEgg()
             Spacer(Modifier.height(40.dp))
         }

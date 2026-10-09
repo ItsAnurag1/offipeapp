@@ -28,7 +28,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.offipe.app.R
 import com.offipe.app.domain.UpiParser
 import com.offipe.app.presentation.PayViewModel
 import com.offipe.app.presentation.ui.components.GhostActionBar
@@ -86,6 +88,24 @@ fun QrResultScreen(
             }
             Spacer(Modifier.weight(1f))
             Box(Modifier.size(42.dp))
+        }
+
+        if (raw == null) {
+            Column(
+                Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = stringResource(R.string.qr_reading),
+                    style = OffipeType.TitleLarge,
+                    color = OffipeColors.TextPrimary
+                )
+            }
+            return@Column
         }
 
         if (upiData == null) {

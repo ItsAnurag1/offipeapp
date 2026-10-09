@@ -43,6 +43,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -518,28 +519,27 @@ private fun AccessibilityTroubleshoot() {
         StepRow(2, "Tap the ⋮ three dots (top right)")
         StepRow(3, "Select \"Allow restricted settings\" → confirm with PIN")
         StepRow(4, "Open Offipe → enable Accessibility service")
-        Spacer(Modifier.height(10.dp))
+        Spacer(Modifier.height(14.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
             TextKey(
                 text = "Open settings",
                 onClick = { openAccessibilitySettings(context) },
                 color = OffipeColors.Mark
             )
-            Spacer(Modifier.width(10.dp))
-            TextKey(
-                text = "View guide",
-                onClick = {
-                    val intent = Intent(
-                        Intent.ACTION_VIEW,
-                        Uri.parse(
-                            "https://github.com/codertakshiv/offipeapp/"
-                        )
-                    ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    runCatching { context.startActivity(intent) }
-                },
-                color = OffipeColors.TextSecondary
-            )
         }
+        Spacer(Modifier.height(12.dp))
+        GhostActionBar(
+            text = stringResource(R.string.github_source_guides),
+            onClick = {
+                val intent = Intent(
+                    Intent.ACTION_VIEW,
+                    Uri.parse("https://github.com/codertakshiv/offipeapp/")
+                ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                runCatching { context.startActivity(intent) }
+            },
+            modifier = Modifier.fillMaxWidth(),
+            height = 46.dp
+        )
     }
 }
 
@@ -574,7 +574,7 @@ private fun AboutRow(versionName: String) {
     ReadoutRow(
         label = "About",
         value = "",
-        sublabel = "Offipe · V$versionName",
+        sublabel = stringResource(R.string.about_credit, versionName),
         leading = {
             Image(
                 painter = offipeLogoPainter(),
