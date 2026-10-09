@@ -24,6 +24,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -42,9 +43,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import com.offipe.app.R
 import com.offipe.app.data.PreferencesRepository
+import com.offipe.app.data.UserNameRules
 import com.offipe.app.domain.OperationMode
 import com.offipe.app.presentation.HistoryViewModel
 import com.offipe.app.presentation.permissions.PermissionStatus
@@ -52,9 +56,13 @@ import com.offipe.app.presentation.permissions.openAccessibilitySettings
 import com.offipe.app.presentation.permissions.openOverlaySettings
 import com.offipe.app.presentation.permissions.rememberPermissionLaunchers
 import com.offipe.app.presentation.ui.components.Chip
+import com.offipe.app.presentation.ui.components.GhostActionBar
 import com.offipe.app.presentation.ui.components.Hairline
+import com.offipe.app.presentation.ui.components.InlineField
 import com.offipe.app.presentation.ui.components.LedDot
 import com.offipe.app.presentation.ui.components.OffipeDialog
+import com.offipe.app.presentation.ui.components.OffipeDialogSurface
+import com.offipe.app.presentation.ui.components.PrimaryActionBar
 import com.offipe.app.presentation.ui.components.ReadoutRow
 import com.offipe.app.presentation.ui.components.Segmented
 import com.offipe.app.presentation.ui.components.Tag
@@ -92,6 +100,7 @@ fun SettingsScreen(
 ) {
     val mode by prefsRepo.operationMode.collectAsState(initial = OperationMode.AUTO)
     val pinLength by prefsRepo.pinLength.collectAsState(initial = 6)
+    val userName by prefsRepo.userName.collectAsState(initial = "")
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val launchers = rememberPermissionLaunchers()
@@ -103,6 +112,8 @@ fun SettingsScreen(
     var pinOpen by remember { mutableStateOf(false) }
     var accessOpen by remember { mutableStateOf(!allGranted) }
     var confirmClear by remember { mutableStateOf(false) }
+    var editNameOpen by remember { mutableStateOf(false) }
+    var nameDraft by remember(userName) { mutableStateOf(userName) }
 
     Column(
         modifier
@@ -266,6 +277,27 @@ fun SettingsScreen(
         // ── General ──
         GroupLabel("General")
         Column(Modifier.padding(horizontal = 20.dp)) {
+            ReadoutRow(
+                label = "Display Name",
+                value = "",
+                sublabel = userName.ifBlank { "Add a name for your greeting" },
+                leading = { RowIcon(Icons.Default.Person, tint = OffipeColors.TextMuted) },
+                onClick = {
+                    nameDraft = userName
+                    editNameOpen = true
+                },
+                trailing = {
+                    TextKey(
+                        text = "Change",
+                        onClick = {
+                            nameDraft = userName
+                            editNameOpen = true
+                        },
+                        color = OffipeColors.Mark
+                    )
+                }
+            )
+            Hairline()
             LinkRow("Transaction History", onOpenHistory)
             Hairline()
             LinkRow("Help & FAQ", onOpenFaq)
@@ -278,7 +310,7 @@ fun SettingsScreen(
                 label = "Clear All Data",
                 value = "",
                 valueColor = OffipeColors.Danger,
-                sublabel = "Delete every stored transaction",
+                sublabel = "Delete transactions, balance and cached installer",
                 onClick = { confirmClear = true },
                 trailing = { Chip(text = "Clear", color = OffipeColors.Danger) }
             )
@@ -291,9 +323,9 @@ fun SettingsScreen(
 
     if (confirmClear) {
         OffipeDialog(
-            title = "Clear transaction history?",
-            message = "Every locally-stored payment record will be deleted. " +
-                "This cannot be undone.",
+            title = "Clear all local data?",
+            message = "Transactions, the saved balance and the cached installer " +
+                "will be deleted. This cannot be undone.",
             confirmLabel = "Clear",
             onConfirm = {
                 confirmClear = false
@@ -302,6 +334,51 @@ fun SettingsScreen(
             onDismiss = { confirmClear = false },
             danger = true
         )
+    }
+
+    if (editNameOpen) {
+        Dialog(onDismissRequest = { editNameOpen = false }) {
+            OffipeDialogSurface {
+                Column(Modifier.padding(horizontal = 22.dp, vertical = 22.dp)) {
+                    Text(
+                        text = "Change display name",
+                        style = OffipeType.TitleLarge,
+                        color = OffipeColors.TextPrimary
+                    )
+                    Spacer(Modifier.height(14.dp))
+                    InlineField(
+                        value = nameDraft,
+                        onValueChange = { value ->
+                            if (value.length <= UserNameRules.MAX_LENGTH) nameDraft = value
+                        },
+                        label = "Your name",
+                        placeholder = "Name",
+                        imeAction = ImeAction.Done,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(Modifier.height(22.dp))
+                    Row(horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(10.dp)) {
+                        GhostActionBar(
+                            text = "Cancel",
+                            onClick = { editNameOpen = false },
+                            modifier = Modifier.weight(1f),
+                            height = 48.dp
+                        )
+                        PrimaryActionBar(
+                            text = "Save",
+                            onClick = {
+                                scope.launch {
+                                    prefsRepo.setUserName(nameDraft)
+                                    editNameOpen = false
+                                }
+                            },
+                            modifier = Modifier.weight(1f),
+                            height = 48.dp
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -455,8 +532,7 @@ private fun AccessibilityTroubleshoot() {
                     val intent = Intent(
                         Intent.ACTION_VIEW,
                         Uri.parse(
-                            "https://cleanbrowsing.org/support/mobile/" +
-                                "disable-restricted-settings-android"
+                            "https://github.com/codertakshiv/offipeapp/"
                         )
                     ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     runCatching { context.startActivity(intent) }

@@ -9,6 +9,7 @@ import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import android.view.accessibility.AccessibilityWindowInfo
+import com.offipe.app.BuildConfig
 import com.offipe.app.domain.FrameFilter
 
 /**
@@ -88,7 +89,7 @@ class UssdAccessibilityService : AccessibilityService() {
                 AccessibilityServiceInfo.DEFAULT
             notificationTimeout = 100
         }
-        Log.d(TAG, "service connected")
+        if (BuildConfig.DEBUG) Log.d(TAG, "service connected")
     }
 
     override fun onDestroy() {
@@ -139,11 +140,11 @@ class UssdAccessibilityService : AccessibilityService() {
      */
     fun sendReply(reply: String): Boolean {
         val root = findUssdRoot() ?: run {
-            Log.w(TAG, "sendReply: no USSD window found")
+            if (BuildConfig.DEBUG) Log.w(TAG, "sendReply: no USSD window found")
             return false
         }
         val edit = findEditText(root) ?: run {
-            Log.w(TAG, "sendReply: no EditText in USSD window")
+            if (BuildConfig.DEBUG) Log.w(TAG, "sendReply: no EditText in USSD window")
             return false
         }
 
@@ -218,7 +219,6 @@ class UssdAccessibilityService : AccessibilityService() {
         val isTerminal = !isMenu && hasOnlyDismiss(root)
 
         lastEmittedText = joinedText
-        Log.d(TAG, "frame: $joinedText (menu=$isMenu terminal=$isTerminal)")
         frameListener?.onFrame(joinedText, isMenu, isTerminal)
     }
 
@@ -241,7 +241,7 @@ class UssdAccessibilityService : AccessibilityService() {
     private fun verifySessionStillAlive() {
         if (!sessionActive) return
         if (findUssdRoot() == null) {
-            Log.d(TAG, "USSD window gone — session ended")
+            if (BuildConfig.DEBUG) Log.d(TAG, "USSD window gone — session ended")
             frameListener?.onSessionEnded("dialog_dismissed")
             lastEmittedText = null
             frameFilter.reset()

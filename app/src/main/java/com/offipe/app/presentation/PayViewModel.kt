@@ -147,6 +147,7 @@ class PayViewModel(
             val newErrors = current.errors.toMutableMap()
             if (vpa != null) newErrors.remove(FormField.VPA)
             if (amount != null) newErrors.remove(FormField.AMOUNT)
+            if (note != null) newErrors.remove(FormField.NOTE)
             current.copy(
                 vpa = vpa ?: current.vpa,
                 amount = amount ?: current.amount,
@@ -179,6 +180,8 @@ class PayViewModel(
      * Manual taps of the Pay button at 4-5 digits also reach here.
      */
     fun attemptPayment() {
+        if (_sessionState.value is SessionState.Running) return
+
         val state = _uiState.value
         val mode = operationMode.value
 
@@ -199,6 +202,9 @@ class PayViewModel(
         }
         InputValidator.validateAmount(state.amount).also {
             if (!it.isValid) errors[FormField.AMOUNT] = it.errorMessage!!
+        }
+        InputValidator.validateNote(state.note).also {
+            if (!it.isValid) errors[FormField.NOTE] = it.errorMessage!!
         }
 
         // PIN is required only for automated modes; manual mode lets the

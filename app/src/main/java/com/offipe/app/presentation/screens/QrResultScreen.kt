@@ -143,13 +143,23 @@ fun QrResultScreen(
                         .padding(vertical = 18.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Tag("Amount")
-                    Spacer(Modifier.height(8.dp))
-                    Text(
-                        text = upiData.amount?.let { "₹$it" } ?: "—",
-                        style = OffipeType.AmountLg,
-                        color = OffipeColors.TextPrimary
-                    )
+                    if (upiData.amount != null) {
+                        Tag("Amount")
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            text = "₹${upiData.amount}",
+                            style = OffipeType.AmountLg,
+                            color = OffipeColors.TextPrimary
+                        )
+                    } else {
+                        Tag("No amount requested")
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            text = "You can enter the amount before paying.",
+                            style = OffipeType.BodyMedium,
+                            color = OffipeColors.TextSecondary
+                        )
+                    }
                     if (!upiData.transactionNote.isNullOrBlank()) {
                         Spacer(Modifier.height(14.dp))
                         Tag("Note")

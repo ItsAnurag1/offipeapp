@@ -23,6 +23,7 @@ import androidx.compose.material.icons.outlined.HelpOutline
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,6 +32,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import com.offipe.app.domain.FormField
 import com.offipe.app.domain.OperationMode
@@ -85,7 +87,7 @@ fun PayScreen(
     onNavigateScan: () -> Unit,
     onNavigateHistory: () -> Unit,
     onNavigateFaq: () -> Unit,
-    permissions: PermissionStatus,
+    permissions: State<PermissionStatus>,
     modifier: Modifier = Modifier
 ) {
     val ui by viewModel.uiState.collectAsState()
@@ -93,6 +95,7 @@ fun PayScreen(
     val mode by viewModel.operationMode.collectAsState()
     val snackbar by viewModel.snackbar.collectAsState()
     val pinLength by viewModel.pinLength.collectAsState(initial = 6)
+    val permissionStatus = permissions.value
 
     // The PIN gate opens only on submit — never while typing the form.
     var gateOpen by remember { mutableStateOf(false) }
@@ -104,8 +107,8 @@ fun PayScreen(
     }
 
     // Auto-fire when PIN digits entered and gate is open (debounced 250ms).
-    LaunchedEffect(ui.pin, gateOpen) {
-        if (gateOpen && ui.pin.length == pinLength) {
+    LaunchedEffect(ui.pin, gateOpen, pinLength, session) {
+        if (gateOpen && session is SessionState.Idle && ui.pin.length == pinLength) {
             delay(250)
             viewModel.attemptPayment()
         }
@@ -119,7 +122,7 @@ fun PayScreen(
         PayForm(
             ui = ui,
             mode = mode,
-            permissions = permissions,
+            permissions = permissionStatus,
             onPay = { viewModel.attemptPayment() },
             onScan = onNavigateScan,
             onHistory = onNavigateHistory,
@@ -151,6 +154,7 @@ fun PayScreen(
                     gateOpen = false
                     viewModel.onPinChanged("")
                 },
+                useBoxes = true,
                 error = ui.errors[FormField.PIN]
             )
         }
@@ -184,6 +188,7 @@ private fun PayForm(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
     val launchers = rememberPermissionLaunchers()
     val scrollState = rememberScrollState()
 
@@ -283,6 +288,7 @@ private fun PayForm(
                 keyboardType = androidx.compose.ui.text.input.KeyboardType.Email,
                 imeAction = androidx.compose.ui.text.input.ImeAction.Next,
                 onFocusChange = { lineFieldFocused = it },
+                onImeAction = { focusManager.clearFocus() },
                 modifier = Modifier.fillMaxWidth(),
                 trailing = {
                     IconKey(
@@ -347,6 +353,7 @@ private fun PayForm(
                 onValueChange = onNote,
                 label = "Note (optional)",
                 placeholder = "For coffee",
+                error = ui.errors[FormField.NOTE],
                 onFocusChange = { lineFieldFocused = it },
                 modifier = Modifier.fillMaxWidth(),
                 trailing = {

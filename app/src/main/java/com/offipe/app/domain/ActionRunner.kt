@@ -24,11 +24,11 @@ data class ActionRun(
  * Pure domain logic with no Android framework dependencies (testable in isolation).
  *
  * Termination rules (priority order, mirrors the proven `UssdAction.ts` runner):
- *   1. Frame matches one of [UNIVERSAL_SUCCESS_PATTERNS] → success, even if
+ *   1. Frame matches one of `action.failurePatterns` → fail with carrier text.
+ *   2. Frame matches one of [UNIVERSAL_SUCCESS_PATTERNS] → success, even if
  *      the dialog still has an input field. Some carriers append a
  *      "1. Save contact 2. Exit" menu after the success message; we don't
  *      want that follow-up.
- *   2. Frame matches one of `action.failurePatterns` → fail with carrier text.
  *   3. Frame matches the current `done` step → success.
  *   4. Frame matches a non-`done` step → send the step's reply.
  *   5. Frame is `isTerminal` and didn't match any of the above → fail with
@@ -56,10 +56,10 @@ class ActionRunner(private val engine: UssdEnginePort) {
             Regex("successfully\\s+(?:sent|paid|completed|debited|transferred)", RegexOption.IGNORE_CASE),
             Regex("transaction\\s+successful", RegexOption.IGNORE_CASE),
             Regex("txn\\s+successful", RegexOption.IGNORE_CASE),
-            Regex("payment\\s+successful", RegexOption.IGNORE_CASE),
-            // A real referenceId in the text is a strong success signal
-            Regex("ref(?:erence)?\\s*(?:id|no|number|#)?\\s*[:\\-]?\\s*\\d{6,}", RegexOption.IGNORE_CASE)
+            Regex("payment\\s+successful", RegexOption.IGNORE_CASE)
         )
+
+        private val TEMPLATE_PLACEHOLDER = Regex("\\{([^{}]+)\\}")
     }
 
     /**
@@ -111,22 +111,22 @@ class ActionRunner(private val engine: UssdEnginePort) {
 
                     val text = frame.text
 
-                    // ── Priority 1: universal success short-circuit ────────
-                    if (matchesUniversalSuccess(text)) {
+                    // ── Priority 1: action-specific failure patterns ───────
+                    if (matchesFailurePattern(text, action.failurePatterns)) {
                         terminated = true
-                        eventFlow.emit(ActionEvent.Done(text))
-                        resultDeferred.complete(ActionResult(success = true, resultText = text))
+                        eventFlow.emit(ActionEvent.Error("Transaction failed", text))
+                        resultDeferred.complete(ActionResult(success = false, resultText = text))
                         engine.dismissDialog()
                         engine.cancel()
                         job?.cancel()
                         return@collect
                     }
 
-                    // ── Priority 2: action-specific failure patterns ───────
-                    if (matchesFailurePattern(text, action.failurePatterns)) {
+                    // ── Priority 2: universal success short-circuit ────────
+                    if (matchesUniversalSuccess(text)) {
                         terminated = true
-                        eventFlow.emit(ActionEvent.Error("Transaction failed", text))
-                        resultDeferred.complete(ActionResult(success = false, resultText = text))
+                        eventFlow.emit(ActionEvent.Done(text))
+                        resultDeferred.complete(ActionResult(success = true, resultText = text))
                         engine.dismissDialog()
                         engine.cancel()
                         job?.cancel()
@@ -148,6 +148,7 @@ class ActionRunner(private val engine: UssdEnginePort) {
                             eventFlow.emit(ActionEvent.Done(text))
                             resultDeferred.complete(ActionResult(success = true, resultText = text))
                             engine.dismissDialog()
+                            engine.cancel()
                             job?.cancel()
                             return@collect
                         }
@@ -235,11 +236,9 @@ class ActionRunner(private val engine: UssdEnginePort) {
      * Replaces `{key}` placeholders in [template] with values from [vars].
      */
     fun fillTemplate(template: String, vars: Map<String, String>): String {
-        var result = template
-        for ((key, value) in vars) {
-            result = result.replace("{$key}", value)
+        return TEMPLATE_PLACEHOLDER.replace(template) { match ->
+            vars[match.groupValues[1]] ?: match.value
         }
-        return result
     }
 
     fun matchesUniversalSuccess(text: String): Boolean =
