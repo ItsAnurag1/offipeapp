@@ -16,13 +16,13 @@
   <a href="https://github.com/codertakshiv/offipeapp/releases">Releases</a>
 </p>
 
-## What is Offipe?
+## 📡 What is Offipe?
 
 Offipe is an unofficial Android client for UPI payments over the carrier's `*99#` USSD service. It automates the menu-driven interaction that would otherwise require dialing codes and entering each response by hand. A cellular connection to the carrier is still required; mobile data is not part of the USSD payment flow.
 
 Offipe is not a bank, payment processor, or replacement for the carrier service. The bank and carrier process each transaction through their existing USSD systems.
 
-## How it works
+## 🔄 How it works
 
 1. The user opens Pay, enters a UPI ID (or scans a UPI QR code), an amount, an optional note, and a UPI PIN.
 2. In Auto mode, Offipe starts the appropriate `*99#` session and its accessibility service reads the carrier dialog.
@@ -42,7 +42,7 @@ flowchart TD
     C --> G[Result and local transaction history]
 ```
 
-## Screenshots
+## 🖼️ Screenshots
 
 | Home | Pay | Scan QR | Balance | Settings |
 |:---:|:---:|:---:|:---:|:---:|
@@ -80,7 +80,7 @@ The manifest declares:
 
 There is no `INTERNET` permission in the app manifest. GitHub help links open an external browser when selected; those links are not used by the payment flow.
 
-## Install
+## 📦 Install
 
 Download an APK from [GitHub Releases](https://github.com/codertakshiv/offipeapp/releases), install it, and grant the permissions needed for the mode you intend to use. A phone with a cellular voice SIM and `*99#` service is required for live payments.
 
@@ -98,7 +98,7 @@ For a source build, use JDK 17 and an Android SDK that includes API 35:
 
 The debug APK is written to `app/build/outputs/apk/debug/app-debug.apk`. When sideloading on Android 13 or later, Android may block the accessibility service as a restricted setting. Open Settings → Apps → Offipe → the three-dot menu → Allow restricted settings, then enable Offipe under Accessibility.
 
-## Privacy and security
+## 🔐 Privacy and security
 
 - Transaction records and the saved balance are stored in the app-private Room database protected by SQLCipher. On first run, Offipe generates a random 32-byte database key and wraps it using AES-256-GCM with an Android Keystore key; the encrypted key and IV are kept in private SharedPreferences.
 - DataStore holds preferences such as operation mode, PIN length, onboarding state, and display name. These preferences are not stored in the SQLCipher database.
@@ -107,7 +107,7 @@ The debug APK is written to `app/build/outputs/apk/debug/app-debug.apk`. When si
 - Android backup is disabled and extraction rules exclude app data from cloud backup and device transfer.
 - The app has no declared internet permission or app API client. USSD traffic still uses the carrier network and is subject to that network's security properties.
 
-## Known limitations
+## ⚠️ Known limitations
 
 - The supported banks and carriers depend on the carrier's and bank's `*99#` menus. `CarrierDetector` exists, but the payment flow currently does not invoke its unsupported-carrier check; do not rely on it to detect or block Jio.
 - Payment amount validation is limited to ₹1–₹5,000 and two decimal places.
@@ -140,6 +140,15 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution and testing guidance. [A
 ## License
 
 Offipe is distributed under the [MIT License](LICENSE).
+
+## 📝 Short terms and conditions
+
+- Use Offipe only with an account and SIM you are authorized to use. Check the recipient and amount before confirming; USSD payments may be irreversible.
+- Your bank and carrier process transactions and control service availability, limits, and any fees. Offipe is provided on a best-effort basis and cannot guarantee every session will succeed.
+- Keep your UPI PIN private and your device secure. USSD and accessibility behavior can vary by carrier and Android device.
+- Offipe is not a registered payment service and is not affiliated with NPCI, any bank, carrier, or payment provider. Use it at your own risk.
+
+This is a brief summary, not a replacement for the full Terms of Use in the app under Settings → Terms of Use.
 
 ## Disclaimer
 
