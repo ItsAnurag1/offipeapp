@@ -60,11 +60,20 @@ class ActionRunnerLookupTest : FunSpec({
         )
         frames.emit(
             UssdFrame(
-                text = "Paying PREMAVATIDEVI ,\nEnter Amount in Rs.\n or 00.Back",
+                text = "Please wait",
                 isMenu = true,
                 isTerminal = false,
                 sessionId = 42,
                 frameId = 2
+            )
+        )
+        frames.emit(
+            UssdFrame(
+                text = "Paying PREMAVATIDEVI ,\nEnter Amount in Rs.\n or 00.Back",
+                isMenu = true,
+                isTerminal = false,
+                sessionId = 42,
+                frameId = 3
             )
         )
 

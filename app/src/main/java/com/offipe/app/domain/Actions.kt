@@ -175,8 +175,9 @@ object Actions {
                 delayMs = 0L
             ),
             ActionStep(
-                match = Regex("(?s).*"),
-                done = true
+                match = MobileLookupParser.LINKED,
+                done = true,
+                label = "Recipient found"
             )
         ),
         failurePatterns = listOf(MobileLookupParser.NOT_LINKED),

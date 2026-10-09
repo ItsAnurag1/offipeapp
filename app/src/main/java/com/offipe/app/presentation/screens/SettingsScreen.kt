@@ -81,8 +81,8 @@ import kotlinx.coroutines.launch
  *    control + live description); Permissions expands into the four
  *    permission rows with Grant keys, the sideload troubleshoot and an
  *    "All granted" green check when everything is on.
- *  - General: Transaction History, Help & FAQ, Privacy Policy,
- *    Terms of Use, Clear All Data (danger confirm), About.
+ *  - General: Help & FAQ, Privacy Policy, Terms of Use, Clear All Data
+ *    (danger confirm), About.
  *
  * Tapping the About row still summons the cat overlay easter egg.
  */
@@ -94,7 +94,6 @@ fun SettingsScreen(
     versionName: String,
     onClearAllData: () -> Unit,
     onOpenFaq: () -> Unit,
-    onOpenHistory: () -> Unit,
     onOpenPrivacy: () -> Unit,
     onOpenTerms: () -> Unit,
     modifier: Modifier = Modifier
@@ -298,8 +297,6 @@ fun SettingsScreen(
                     )
                 }
             )
-            Hairline()
-            LinkRow("Transaction History", onOpenHistory)
             Hairline()
             LinkRow("Help & FAQ", onOpenFaq)
             Hairline()

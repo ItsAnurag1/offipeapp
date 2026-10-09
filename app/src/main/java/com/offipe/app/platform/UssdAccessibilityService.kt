@@ -182,11 +182,13 @@ class UssdAccessibilityService : AccessibilityService() {
                 mobile
             )
         }
-        if (!edit.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, args)) return false
+        val setTextSucceeded = edit.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, args)
+        if (!setTextSucceeded && edit.text?.toString() != mobile) return false
 
         val refreshedRoot = findUssdRoot() ?: root
-        val send = findButtonByExactText(refreshedRoot, SEND_LABELS) ?: return false
-        val submitted = send.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+        val send = findButtonByExactText(refreshedRoot, SEND_LABELS)
+        val submitted = send?.performAction(AccessibilityNodeInfo.ACTION_CLICK) == true ||
+            edit.performAction(AccessibilityNodeInfo.ACTION_CLICK)
         if (submitted) {
             lastEmittedText = null
             frameFilter.reset()

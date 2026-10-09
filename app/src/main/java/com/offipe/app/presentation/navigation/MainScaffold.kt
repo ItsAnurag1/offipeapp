@@ -8,6 +8,7 @@ import android.net.Uri
 import android.os.SystemClock
 import android.widget.Toast
 import android.view.HapticFeedbackConstants
+import androidx.activity.compose.BackHandler
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -276,7 +277,6 @@ private fun MainScaffold(app: OffipeApplication) {
                         }
                     },
                     onOpenFaq = { push(Screen.Faq.route) },
-                    onOpenHistory = { push(Screen.History.route) },
                     onOpenPrivacy = { push(Screen.Privacy.route) },
                     onOpenTerms = { push(Screen.Terms.route) }
                 )
@@ -295,6 +295,18 @@ private fun MainScaffold(app: OffipeApplication) {
             }
             composable(Screen.Terms.route) {
                 LegalScreen(onClose = { navController.popBackStack() }, initialTab = 1)
+            }
+        }
+
+        if (currentRoute == Screen.Pay.route) {
+            BackHandler {
+                when (payViewModel.sessionState.value) {
+                    is SessionState.Running -> payViewModel.cancelSession()
+                    is SessionState.Success, is SessionState.Failed -> payViewModel.dismissSession()
+                    SessionState.Idle -> Unit
+                }
+                payViewModel.onNavigateAway()
+                navController.popBackStack()
             }
         }
 

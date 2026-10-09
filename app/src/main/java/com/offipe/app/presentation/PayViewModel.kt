@@ -558,8 +558,7 @@ class PayViewModel(
     }
 
     fun onNavigateAway() {
-        // Defensive: if the user backs out mid-form, drop the in-memory PIN.
-        _uiState.update { it.copy(pin = "") }
+        _uiState.value = PayUiState()
     }
 
     fun onBackground() {

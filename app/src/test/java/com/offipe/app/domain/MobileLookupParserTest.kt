@@ -39,6 +39,12 @@ class MobileLookupParserTest : FunSpec({
         MobileLookupParser.classify("Please wait while processing") shouldBe MobileLookupResult.Failed
     }
 
+    test("lookup action ignores intermediate frames until a known result appears") {
+        Actions.LookupMobile.steps[1].match.containsMatchIn("Please wait") shouldBe false
+        Actions.LookupMobile.steps[1].match.containsMatchIn(linkedDialog) shouldBe true
+        Actions.LookupMobile.failurePatterns.any { it.containsMatchIn(notLinkedDialog) } shouldBe true
+    }
+
     test("classification tolerates capitalization and extra whitespace") {
         MobileLookupParser.MOBILE_PROMPT.containsMatchIn(" ENTER   mobile No. ") shouldBe true
         MobileLookupParser.classify(
